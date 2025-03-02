@@ -14,7 +14,6 @@ const Home: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 5 }}>
-      {/* Header */}
       <Grid container justifyContent="space-between" alignItems="center">
         <Typography variant="h4" fontWeight="bold">
           TODO List
@@ -24,21 +23,16 @@ const Home: React.FC = () => {
         </Button>
       </Grid>
 
-      {/* Contenido */}
       <Grid container spacing={4} sx={{ mt: 3 }}>
-        {/* Formulario de tareas */}
         <Grid size={{xs: 12, md: 5}}>
           <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: "#f8f9fa" }}>
             <TaskForm />
           </Paper>
         </Grid>
 
-        {/* Lista de tareas */}
         <Grid size={{xs: 12, md: 7}}>
           <Paper elevation={3} sx={{ p: 3, borderRadius: 2, backgroundColor: "#ffffff" }}>
-            
-                <TaskList />
-
+            <TaskList />
           </Paper>
         </Grid>
       </Grid>
@@ -54,17 +48,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <TagProvider>
-        <TaskProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            </Routes>
-          </Router>
-        </TaskProvider>
-      </TagProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <TaskProvider>
+                <TagProvider>
+                  <Home />
+                </TagProvider>
+              </TaskProvider>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 };
