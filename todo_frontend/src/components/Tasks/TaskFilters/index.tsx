@@ -24,8 +24,9 @@ const DEFAULT_FORM_DATA: FiltersForm = {
 };
 
 const TaskFilters: React.FC = () => {
-    const tagContext = useContext(TagContext);
-    const taskContext = useContext(TaskContext);
+    const tagContext = useContext(TagContext)!;
+    const taskContext = useContext(TaskContext)!;
+    const [filtersForm, setFiltersForm] = useState<FiltersForm>(DEFAULT_FORM_DATA);
 
     if (!tagContext || !taskContext) {
         return <p>Cargando...</p>;
@@ -33,8 +34,6 @@ const TaskFilters: React.FC = () => {
 
     const { tags } = tagContext;
     const { stablishFilters } = taskContext;
-
-    const [filtersForm, setFiltersForm] = useState<FiltersForm>(DEFAULT_FORM_DATA);
 
     const handleFilterChange = () => {
         stablishFilters({
@@ -93,8 +92,7 @@ const TaskFilters: React.FC = () => {
                 onChange={onChange}
                 fullWidth
             />
-            
-            {/* Alineación horizontal del selector de etiquetas y el checkbox */}
+
             <Box display="flex" alignItems="center" gap={2}>
                 <TagSelectField 
                     options={getTagsOptions()}

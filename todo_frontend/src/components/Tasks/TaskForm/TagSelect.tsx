@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useContext, useState } from 'react';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -8,7 +8,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
-import { getTags, createTag } from '../../../api/tags';
+import { TagContext } from '../../../context/Tags'
 import Box from '@mui/material/Box';
 import { Chip } from '@mui/material';
 
@@ -38,20 +38,8 @@ const MenuProps = {
 };
 
 export default function MultipleSelectWithInput({ selectedTags, setSelectedTags }: TagSelectorProps) {
-  const [tags, setTags] = useState<Tag[]>([]);
   const [newTag, setNewTag] = useState<string>("");
-
-  useEffect(() => {
-    getTags()
-      .then((res) => {
-        const fetchedTags: Tag[] = Array.isArray(res) ? res : [];
-        setTags(fetchedTags);
-      })
-      .catch((err) => {
-        console.error("Error obteniendo tags:", err);
-        setTags([]);
-      });
-  }, []);
+  const { tags, addTag } = useContext(TagContext)!;
 
   const handleChange = (event: SelectChangeEvent<typeof selectedTags>) => {
     const {
@@ -65,10 +53,7 @@ export default function MultipleSelectWithInput({ selectedTags, setSelectedTags 
     if (!newTag.trim()) return;
 
     try {
-      const res = await createTag(newTag);
-      const createdTag: Tag = res;
-      
-      setTags((prevTags) => [...prevTags, createdTag]);
+      const createdTag = await addTag(newTag);
       setSelectedTags([...selectedTags, createdTag]);
       setNewTag("");
     } catch (err) {

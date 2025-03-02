@@ -8,7 +8,6 @@ import TasksFilters from './TaskFilters'
 
 const TaskList: React.FC = () => {
   const { tasks } = useContext(TaskContext)!;
-  console.log(tasks)
   return (
     <Container sx={{ marginTop: 4 }}>
   
