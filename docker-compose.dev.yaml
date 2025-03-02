@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build:
+      context: todo_frontend
+      dockerfile: Docker/Dockerfile
+      target: development
+    volumes:
+      - ./todo_frontend/public:/srv/app/public
+      - ./todo_frontend/src:/srv/app/src
+      - /srv/app/node_modules
+    working_dir: /srv/app
+    command: [ "npm", "run", "dev" ]
+    networks:
+      - net-todo
+    depends_on:
+      - backend
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - static:/home/app/static
+    ports:
+      - "80:80"
+    networks:
+      - net-todo
+    depends_on:
+      - frontend
+      - backend
+
+  backend:
+    build:
+      context: todo_backend
+      dockerfile: Docker/Dockerfile
+    container_name: todo-backend
+    volumes:
+      - ./todo_backend:/home/app
+      - static:/home/app/static
+    working_dir: /home/app
+    env_file: ./todo_backend/.env
+    ports:
+      - "8000:9000"
+    networks:
+      - net-todo
+
+volumes:
+  postgresql_data:
+  static:

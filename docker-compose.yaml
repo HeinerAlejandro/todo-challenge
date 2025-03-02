@@ -1,0 +1,38 @@
+version: '3.4'
+services:
+  frontend:
+    container_name: todo-frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - net-todo
+    tty: true
+    depends_on:
+      - backend
+
+  backend:
+    container_name: todo-backend
+    working_dir: /home/app
+    ports:
+      - "8000:9000"
+    networks:
+      - net-todo
+    depends_on:
+      - postgres
+
+  postgres:
+    image: bitnami/postgresql:16.1.0
+    volumes:
+      - postgresql_data:/bitnami/postgresql
+    env_file: ./todo_backend/.env
+    networks:
+      - net-todo
+    ports:
+      - "5432:5432"
+
+
+networks:
+  net-todo:
+
+volumes:
+  postgresql_data:
