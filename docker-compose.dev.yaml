@@ -10,6 +10,7 @@ services:
       - /srv/app/node_modules
     working_dir: /srv/app
     command: [ "npm", "run", "dev" ]
+    env_file: ./todo_frontend/.env
     networks:
       - net-todo
     depends_on:
