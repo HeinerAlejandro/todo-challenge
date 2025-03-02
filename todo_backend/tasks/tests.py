@@ -67,7 +67,8 @@ class TaskSerializerTest(TestCase):
             "title": "Completar reporte",
             "description": "Enviar antes del lunes",
             "priority": 2,
-            "finish_at": future_date
+            "finish_at": future_date,
+            "tags": [self.tag1.id, self.tag2.id]
         }
         serializer = TaskSerializer(data=data, context={"request": self.request})
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -96,7 +97,8 @@ class TaskSerializerTest(TestCase):
             "title": "Tarea con fecha incorrecta",
             "priority": 2,
             "created_at": creation_date,
-            "finish_at": past_date
+            "finish_at": past_date,
+            "tags": [self.tag1.id, self.tag2.id]
         }
         serializer = TaskSerializer(data=data, context={"request": self.request})
 
@@ -116,8 +118,8 @@ class TaskSerializerTest(TestCase):
 
         serializer = TaskSerializer(task)
         self.assertEqual(len(serializer.data["tags"]), 2)
-        self.assertEqual(serializer.data["tags"][0]["name"], "QA")
-        self.assertEqual(serializer.data["tags"][1]["name"], "Desarrollo")
+        self.assertEqual(serializer.data["tags_details"][0]["name"], "QA")
+        self.assertEqual(serializer.data["tags_details"][1]["name"], "Desarrollo")
 
     def test_task_with_parent_task(self):
         """Prueba que se pueda asignar una `parent_task` correctamente"""
@@ -133,7 +135,8 @@ class TaskSerializerTest(TestCase):
             "description": "Esta es una subtarea",
             "priority": 1,
             "finish_at": timezone.now() + timezone.timedelta(days=2),
-            "parent_task": parent_task.id
+            "parent_task": parent_task.id,
+            "tags": [self.tag1.id, self.tag2.id]
         }
         serializer = TaskSerializer(data=data, context={"request": self.request})
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -149,7 +152,7 @@ class TagsViewSetTestCase(TestCase):
         self.token = Token.objects.get(user=self.user)
         self.client = APIClient()
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
-        self.url = reverse("tag-list")
+        self.url = reverse("tags-list")
         self.tag_data = {"name": "QA"}
         self.tag = Tag.objects.create(name="Desarrollo", user=self.user)
 
@@ -175,7 +178,7 @@ class TagsViewSetTestCase(TestCase):
 
     def test_update_tag(self):
         """Prueba que un usuario autenticado pueda editar su tag"""
-        url = reverse("tag-detail", args=[self.tag.id])
+        url = reverse("tags-detail", args=[self.tag.id])
         response = self.client.put(url, {"name": "Nuevo nombre"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.tag.refresh_from_db()
@@ -183,7 +186,7 @@ class TagsViewSetTestCase(TestCase):
 
     def test_delete_tag(self):
         """Prueba que un usuario autenticado pueda eliminar un tag"""
-        url = reverse("tag-detail", args=[self.tag.id])
+        url = reverse("tags-detail", args=[self.tag.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Tag.objects.count(), 0)
@@ -223,16 +226,18 @@ class TasksViewSetTestCase(TestCase):
         )
         self.task.tags.add(self.tag)
 
-        self.url = reverse('task-complete-task', args=[self.task.id])
+        self.url = reverse('tasks-complete-task', args=[self.task.id])
 
     def test_mark_task_complete_success(self):
 
         self.assertFalse(self.task.completed)
+        self.assertFalse(self.child_task.completed)
 
         response = self.client.post(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['detail'], 'La tarea ha sido marcada como completada')
+
+        self.assertTrue(response.data["completed"])
 
         self.task.refresh_from_db()
         self.assertTrue(self.task.completed)
@@ -247,11 +252,14 @@ class TasksViewSetTestCase(TestCase):
 
         response = self.client.post(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['detail'], 'La tarea ya está completada.')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertFalse(self.task.completed)
+
+        self.assertEqual(response.data["completed"], False)
 
     def test_mark_task_complete_not_found(self):
-        url = reverse('task-complete-task', args=[999999])
+        url = reverse('tasks-complete-task', args=[999999])
         response = self.client.post(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
